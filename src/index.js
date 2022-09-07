@@ -68,7 +68,7 @@ server.post("/sign-up", async (req, res) => {
       .collection("users")
       .findOne({ email: user.email });
     if (existingUser) {
-      return res.status(422).send({ error: "email is already in use!" });
+      return res.status(409).send({ error: "email is already in use!" });
     }
 
     await db.collection("users").insertOne({ ...user, password: passwordHash });
@@ -81,6 +81,31 @@ server.post("/sign-up", async (req, res) => {
 // Login Route
 server.post("/login", async (req, res) => {
   // Email and password
+
+  const validation = userLoginSchema.validate(req.body, { abortEarly: false });
+  if (validation.error) {
+    const errors = validation.error.details.map((erro) => erro.message);
+    return res.status(422).send(errors);
+  }
+
+  const { email, password } = req.body;
+  try {
+    const user = await db.collection("users").findOne({ email });
+
+    if (user && bcrypt.compareSync(password, user.password)) {
+      const token = uuid();
+      await db.collection("sessions").insertOne({
+        userId: user._id,
+        token,
+      });
+
+      res.status(201).send(token);
+    } else {
+      res.status(404).send({ error: "user not found!" });
+    }
+  } catch (error) {
+    console.error(error);
+  }
 });
 
 // Operation Routes
