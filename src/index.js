@@ -92,7 +92,7 @@ server.post("/auth/login", async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await db.collection("users").findOne({ email });
-
+    console.log(user);
     if (user && bcrypt.compareSync(password, user.password)) {
       const token = uuid();
       await db.collection("sessions").insertOne({
@@ -100,7 +100,7 @@ server.post("/auth/login", async (req, res) => {
         token,
       });
 
-      res.status(201).send(token);
+      res.status(201).send({ token: token, name: user.name });
     } else {
       res.status(404).send({ error: "user not found!" });
     }
