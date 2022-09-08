@@ -95,7 +95,11 @@ server.post("/auth/login", async (req, res) => {
     console.log(user);
     if (user && bcrypt.compareSync(password, user.password)) {
       const token = uuid();
-      await db.collection("sessions").insertOne({
+      await db.collection("sessionsHistory").insertOne({
+        userId: user._id,
+        token,
+      });
+      await db.collection("currentSessions").insertOne({
         userId: user._id,
         token,
       });
@@ -104,6 +108,22 @@ server.post("/auth/login", async (req, res) => {
     } else {
       res.status(404).send({ error: "user not found!" });
     }
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+server.delete("/logout", async (req, res) => {
+  const token = req.headers.authorization?.replace("Bearer ", "");
+  if (!token) {
+    res.status(422).send({ error: "Token is required!" });
+  }
+
+  try {
+    const response = await db
+      .collection("receitas")
+      .deleteMany({ token: token });
+    res.status(201).send(response);
   } catch (error) {
     console.error(error);
   }
@@ -126,7 +146,7 @@ server.post("/cashflows", async (req, res) => {
   const { amount, flowType, description, date } = req.body;
 
   try {
-    const session = await db.collection("sessions").findOne({
+    const session = await db.collection("currentSessions").findOne({
       token,
     });
 
@@ -155,7 +175,7 @@ server.get("/cashflows", async (req, res) => {
   const token = req.headers.authorization?.replace("Bearer ", "");
 
   try {
-    const session = await db.collection("sessions").findOne({
+    const session = await db.collection("currentSessions").findOne({
       token,
     });
 
