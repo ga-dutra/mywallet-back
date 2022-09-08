@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { MongoClient } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 import joi from "joi";
 import bcrypt from "bcrypt";
 import { v4 as uuid } from "uuid";
@@ -73,9 +73,9 @@ server.post("/auth/sign-up", async (req, res) => {
     }
 
     await db.collection("users").insertOne({ ...user, password: passwordHash });
-    res.status(201).send("Usuário criado com sucesso!");
+    res.status(201).send({ message: "User created" });
   } catch (error) {
-    console.error(error);
+    res.status(500).send(error.message);
   }
 });
 
@@ -109,7 +109,7 @@ server.post("/auth/login", async (req, res) => {
       res.status(404).send({ error: "user not found!" });
     }
   } catch (error) {
-    console.error(error);
+    res.status(500).send(error.message);
   }
 });
 
@@ -123,9 +123,9 @@ server.delete("/logout", async (req, res) => {
     const response = await db
       .collection("receitas")
       .deleteMany({ token: token });
-    res.status(201).send(response);
+    res.status(200).send(response);
   } catch (error) {
-    console.error(error);
+    res.status(500).send(error.message);
   }
 });
 
@@ -165,14 +165,18 @@ server.post("/cashflows", async (req, res) => {
       description,
       date,
     });
-    res.status(201).send("Cashflow criado com sucesso!");
+    res.status(201).send({ message: "Cashflow created" });
   } catch (error) {
-    console.error(error);
+    res.status(500).send(error.message);
   }
 });
 
 server.get("/cashflows", async (req, res) => {
   const token = req.headers.authorization?.replace("Bearer ", "");
+
+  if (!token) {
+    res.status(422).send({ error: "Token is required!" });
+  }
 
   try {
     const session = await db.collection("currentSessions").findOne({
@@ -194,7 +198,27 @@ server.get("/cashflows", async (req, res) => {
 
     res.status(200).send(userCashFlows);
   } catch (error) {
-    console.error(error);
+    res.status(500).send(error.message);
+  }
+});
+
+server.delete("/cashflows/:id", async (req, res) => {
+  const id = req.params.id;
+  const token = req.headers.authorization?.replace("Bearer ", "");
+
+  if (!id) {
+    res.status(422).send({ error: "Id is required!" });
+  }
+
+  if (!token) {
+    res.status(422).send({ error: "Token is required!" });
+  }
+
+  try {
+    await db.collection("cashflows").deleteOne({ _id: new ObjectId(id) });
+    res.status(200).send({ message: "Cashflow deleted" });
+  } catch (error) {
+    res.status(500).send(error.message);
   }
 });
 
