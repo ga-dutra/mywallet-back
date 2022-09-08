@@ -222,4 +222,37 @@ server.delete("/cashflows/:id", async (req, res) => {
   }
 });
 
+server.put("/cashflows/:id", async (req, res) => {
+  const id = req.params.id;
+  const token = req.headers.authorization?.replace("Bearer ", "");
+
+  if (!id) {
+    res.status(422).send({ error: "Id is required!" });
+  }
+
+  if (!token) {
+    res.status(422).send({ error: "Token is required!" });
+  }
+
+  const validation = cashflowSchema.validate(req.body, { abortEarly: false });
+  if (validation.error) {
+    const errors = validation.error.details.map((erro) => erro.message);
+    return res.status(422).send(errors);
+  }
+
+  const body = req.body;
+
+  try {
+    const cashflow = await db
+      .collection("cashflows")
+      .findOne({ _id: new ObjectId(id) });
+    await db
+      .collection("cashflows")
+      .updateOne({ _id: cashflow._id }, { $set: body });
+    res.status(200).send({ message: "Cashflow updated" });
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
 server.listen(5000, () => console.log("Listening on port 5000"));
