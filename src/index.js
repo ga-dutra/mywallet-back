@@ -1,34 +1,37 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
-import { MongoClient, ObjectId } from "mongodb";
+import { ObjectId } from "mongodb";
 import joi from "joi";
 import bcrypt from "bcrypt";
 import { v4 as uuid } from "uuid";
-
-dotenv.config();
+import db from "../database/db.js";
 
 // Server inicialization
 const server = express();
 server.use(cors());
 server.use(express.json());
 
-// Mongodb connection
-const mongoClient = new MongoClient(process.env.MONGO_URI);
-let db;
-mongoClient.connect().then(() => {
-  db = mongoClient.db("mywallet_db");
-});
-
 // Joi schemas
 const userSignUpSchema = joi.object({
-  name: joi.string().min(1).required(),
+  name: joi
+    .string()
+    .min(1)
+    .required()
+    .error(new Error("Por favor, digite um nome válido!")),
   email: joi
     .string()
     .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
-    .required(),
-  password: joi.string().min(4).required(),
-  repeat_password: joi.ref("password"),
+    .required()
+    .error(new Error("O email digitado precisa ser válido!")),
+  password: joi
+    .string()
+    .min(4)
+    .required()
+    .error(new Error("A senha deve ter pelo menos 4 caracteres!")),
+  repeat_password: joi
+    .valid(joi.ref("password"))
+    .required()
+    .error(new Error("A senha deve ser igual à anterior!")),
 });
 
 const userLoginSchema = joi.object({
@@ -52,8 +55,7 @@ server.post("/auth/sign-up", async (req, res) => {
 
   const validation = userSignUpSchema.validate(req.body, { abortEarly: false });
   if (validation.error) {
-    const errors = validation.error.details.map((erro) => erro.message);
-    return res.status(422).send(errors);
+    return res.status(422).send(String(validation.error));
   }
   if (!req.body.repeat_password) {
     return res.status(422).send({ error: "repeat_password is required" });
@@ -92,7 +94,6 @@ server.post("/auth/login", async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await db.collection("users").findOne({ email });
-    console.log(user);
     if (user && bcrypt.compareSync(password, user.password)) {
       const token = uuid();
       await db.collection("sessionsHistory").insertOne({
