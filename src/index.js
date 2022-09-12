@@ -1,53 +1,17 @@
 import express from "express";
 import cors from "cors";
 import { ObjectId } from "mongodb";
-import joi from "joi";
 import bcrypt from "bcrypt";
 import { v4 as uuid } from "uuid";
 import db from "../database/db.js";
+import { userLoginSchema, userSignUpSchema } from "../models/users.model.js";
+import { cashflowSchema } from "../models/cashflows.model.js";
 
 // Server inicialization
 const server = express();
 server.use(cors());
 server.use(express.json());
 
-// Joi schemas
-const userSignUpSchema = joi.object({
-  name: joi
-    .string()
-    .min(1)
-    .required()
-    .error(new Error("Por favor, digite um nome válido!")),
-  email: joi
-    .string()
-    .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
-    .required()
-    .error(new Error("O email digitado precisa ser válido!")),
-  password: joi
-    .string()
-    .min(4)
-    .required()
-    .error(new Error("A senha deve ter pelo menos 4 caracteres!")),
-  repeat_password: joi
-    .valid(joi.ref("password"))
-    .required()
-    .error(new Error("A senha deve ser igual à anterior!")),
-});
-
-const userLoginSchema = joi.object({
-  email: joi
-    .string()
-    .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
-    .required(),
-  password: joi.string().min(4).required(),
-});
-
-const cashflowSchema = joi.object({
-  amount: joi.string().required(),
-  flowType: joi.string().valid("inflow", "outflow").required(),
-  description: joi.string().min(1).required(),
-  date: joi.string().required(),
-});
 
 // Sign-up Route
 server.post("/auth/sign-up", async (req, res) => {
