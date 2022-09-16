@@ -12,7 +12,6 @@ const server = express();
 server.use(cors());
 server.use(express.json());
 
-
 // Sign-up Route
 server.post("/auth/sign-up", async (req, res) => {
   // Name, email, password and repeat_password
