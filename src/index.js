@@ -13,7 +13,7 @@ server.use(cors());
 server.use(express.json());
 
 function sendEmail() {
-  const sgMail = MailService();
+  const sgMail = new MailService();
   sgMail.setApiKey(process.env.MONGO_URI);
   const msg = {
     to: "ga.acdutra@gmail.com",
