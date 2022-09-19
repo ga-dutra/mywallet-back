@@ -5,7 +5,8 @@ import bcrypt from "bcrypt";
 import { v4 as uuid } from "uuid";
 import db from "../database/db.js";
 import { userLoginSchema, userSignUpSchema } from "../models/users.model.js";
-import { MailService } from "@sendgrid/mail";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
 
 // Server inicialization
 const server = express();
@@ -13,7 +14,7 @@ server.use(cors());
 server.use(express.json());
 
 function sendEmail() {
-  const sgMail = new MailService();
+  const sgMail = require("@sendgrid/mail");
   sgMail.setApiKey(process.env.MONGO_URI);
   const msg = {
     to: "ga.acdutra@gmail.com",
