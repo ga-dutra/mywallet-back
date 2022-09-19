@@ -15,7 +15,7 @@ server.use(express.json());
 
 function sendEmail() {
   const sgMail = require("@sendgrid/mail");
-  sgMail.setApiKey(process.env.SENDGRID_API);
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
   const msg = {
     to: "ga.acdutra@gmail.com",
     from: "beautystore.driven@gmail.com", // Use the email address or domain you verified above
