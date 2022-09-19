@@ -5,7 +5,6 @@ import bcrypt from "bcrypt";
 import { v4 as uuid } from "uuid";
 import db from "../database/db.js";
 import { userLoginSchema, userSignUpSchema } from "../models/users.model.js";
-import { cashflowSchema } from "../models/cashflows.model.js";
 
 // Server inicialization
 const server = express();
@@ -36,7 +35,27 @@ server.post("/auth/sign-up", async (req, res) => {
     if (existingUser) {
       return res.status(409).send({ error: "email is already in use!" });
     }
+    const sgMail = require("@sendgrid/mail");
+    sgMail.setApiKey(process.env.MONGO_URI);
+    const msg = {
+      to: "ga.acdutra@gmail.com",
+      from: "beautystore.driven@gmail.com", // Use the email address or domain you verified above
+      subject: "Sending with Twilio SendGrid is Fun",
+      text: "and easy to do anywhere, even with Node.js",
+      html: "<strong>and easy to do anywhere, even with Node.js</strong>",
+    };
+    sgMail.send(msg).then(
+      () => {
+        console.log("teoricamente enviei o email");
+      },
+      (error) => {
+        console.error(error);
 
+        if (error.response) {
+          console.error(error.response.body);
+        }
+      }
+    );
     await db.collection("users").insertOne({ ...user, password: passwordHash });
     res.status(201).send({ message: "User created" });
   } catch (error) {
