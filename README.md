@@ -19,3 +19,16 @@
 ![Mongodb](https://img.shields.io/badge/Mongodb-fae7b5?style=for-the-badge&logo=mongodb&logoColor=080808)
 
 </p>
+
+ <h2>Functionalities</h2>
+  <ul>
+    <li>Sign up, Login and Logout</li>
+  <br>
+     <li> Register your cash flows, along with its dates and descriptions</li>
+  <br>
+     <li>Edit the money amount, date and description of your cash flows</li>
+  <br>
+     <li>Delete your cash flows</li>
+  <br>
+     <li>View your wallet balance</li>
+  </ul>
